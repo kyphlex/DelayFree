@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>DelayFree Dispatch Scraper</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; display: flex; justify-content: center; padding-top: 50px; }
+        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 450px; }
+        .progress-container { background: #eee; border-radius: 20px; height: 20px; width: 100%; margin: 20px 0; display: none; }
+        .progress-bar { background: #2ecc71; height: 100%; border-radius: 20px; width: 0%; transition: width 0.3s; }
+        #log { font-size: 13px; color: #555; height: 100px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; background: #fafafa; margin-top: 10px; display: none; }
+        input, button { width: 100%; padding: 12px; margin: 10px 0; border-radius: 6px; border: 1px solid #ddd; box-sizing: border-box; }
+        button { background: #e67e22; color: white; border: none; font-weight: bold; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>DelayFree Dispatch Scraper</h2>
+        <input type="text" id="city" placeholder="Enter City (e.g., Lagos)" required>
+        <button id="startBtn" onclick="startScrape()">Start Search</button>
+
+        <div class="progress-container" id="pContainer">
+            <div class="progress-bar" id="pBar"></div>
+        </div>
+        <div id="status">Ready.</div>
+        <div id="log"></div>
+    </div>
+
+    <script>
+        function startScrape() {
+            const city = document.getElementById('city').value;
+            if (!city) return alert("Enter a city");
+
+            const sessionId = Math.random().toString(36).substring(7);
+            const log = document.getElementById('log');
+            const pBar = document.getElementById('pBar');
+            const status = document.getElementById('status');
+
+            // Show UI elements
+            document.getElementById('pContainer').style.display = 'block';
+            log.style.display = 'block';
+            document.getElementById('startBtn').disabled = true;
+
+            const eventSource = new EventSource(`/progress?city=${city}&session_id=${sessionId}`);
+
+            eventSource.onmessage = function(e) {
+                const data = JSON.parse(e.data);
+                pBar.style.width = data.progress + "%";
+                status.innerText = data.status;
+
+                const entry = document.createElement('div');
+                entry.innerText = `> ${data.status}`;
+                log.prepend(entry);
+
+                if (data.done) {
+                    eventSource.close();
+                    window.location.href = `/download?session_id=${sessionId}&city=${city}`;
+                    document.getElementById('startBtn').disabled = false;
+                }
+            };
+
+            eventSource.onerror = function() {
+                eventSource.close();
+                alert("An error occurred during scraping.");
+            };
+        }
+    </script>
+</body>
+</html>
