@@ -21,29 +21,43 @@ class Scraper:
     def get_dispatch_tags(self, location):
         # Your base tags exactly as provided
         base_tags = [
-            "#HiringDispatchRiders", "#DispatchRiderJobs", "#LogisticsJobs",
-            "#NowHiringRiders", "#DeliveryJobs", "#DispatchJobs", "#WeAreHiring",
-            "#FleetRecruitment", "#LookingForDeliveryJobs", "#DispatchRiderForHire",
-            "#FreelanceRider", "#FullTimeRider", "#ReadyToRide", "#DeliveryDriver",
-            "#HireARider", "#HyperlocalDelivery", "#QuickCommerce", "#QCommerce",
-            "#LastMileDelivery", "#SameDayDelivery", "#InstantDelivery",
-            "#NeighborhoodDelivery", "#OnDemandDelivery", "#FoodDeliveryRider",
-            "#GroceryDelivery", "#PharmacyDelivery", "#ErandsAndLogistics",
-            "#B2BDelivery", "#EcommerceLogistics", "#MotorcycleDispatch",
-            "#BicycleCourier", "#DeliveryVan", "#TricycleDelivery", "#EvDelivery",
-            "#CargoBike", "#DeliveryBox", "#DispatchBike", "#RiderGear",
-            "#CoolingBoxDelivery", "#ExperiencedRider", "#SafeRider", "#DefensiveDriving",
-            "#RouteOptimization", "#GPSNavigation", "#PunctualDelivery",
-            "#CustomerServiceSkills", "#ValidRidersCard", "#LicensedRider",
-            "#CleanDrivingRecord", "#GuarantorAvailable", "#DispatchLife",
-            "#LifeOfARider", "#LogisticsCompany", "#DeliveryService", "#HustleAndMotivate",
-            "#DailyGrind", "#BehindTheHandlebars", "#SendIt", "#WeDeliver",
-            "#FastAndReliable", "#PackageSecured",
-            "How to apply for dispatch rider jobs",
-            "Best logistics company to work for as a rider",
-            "Companies hiring freelance delivery riders",
-            "Same-day hyperlocal delivery services near me",
-            "Average salary for a dispatch rider"
+            # === DEMAND: Companies Hiring Riders ===
+            "hiring dispatch rider",
+            "dispatch rider needed",
+            "vacancy for dispatch rider",
+            "urgent dispatch rider needed",
+            "logistics company hiring",
+            "bike rider wanted",
+            "delivery guy needed",
+            "fleet recruitment",
+            "riders wanted",
+            "dispatch rider job vacancy",
+            "we are hiring dispatch",
+            "dispatch recruitment",
+            "dispatch rider urgently needed",
+
+            # === SUPPLY: Riders Looking for Jobs ===
+            "dispatch rider available",
+            "looking for dispatch rider job",
+            "freelance dispatch rider",
+            "dispatch rider for hire",
+            "need a dispatch job",
+            "experienced dispatch rider",
+            "licensed dispatch rider",
+            "guarantor available dispatch",  # High intent: riders stating they have a guarantor
+            "own my bike dispatch",
+            "ready to work dispatch",
+
+            # === B2B / ACTIVE SERVICE SIGNALS ===
+            # (Businesses promoting these services often need to hire more riders)
+            "errands and logistics",
+            "waybill delivery service",
+            "pickup and dropoff",
+            "keke delivery",
+            "food delivery rider",
+            "pharmacy delivery rider",
+            "dispatch bike remittance",  # Crucial Nigerian term for fleet owners
+            "ecommerce logistics rider"
         ]
 
         # We attach the location to EVERY tag via f-string for absolute generic search
