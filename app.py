@@ -19,9 +19,7 @@ class Scraper:
         self.phone_pattern = r'(\+234\d{10}|0[789][01]\d{8})'
 
     def get_dispatch_tags(self, location):
-        """Your custom tag generator integrated directly."""
-        formatted_loc = "".join(x for x in location.title() if x.isalnum())
-
+        # Your base tags exactly as provided
         base_tags = [
             "#HiringDispatchRiders", "#DispatchRiderJobs", "#LogisticsJobs",
             "#NowHiringRiders", "#DeliveryJobs", "#DispatchJobs", "#WeAreHiring",
@@ -48,40 +46,28 @@ class Scraper:
             "Average salary for a dispatch rider"
         ]
 
-        location_tags = [
-            f"#JobsIn{formatted_loc}",
-            f"#{formatted_loc}Logistics",
-            f"#{formatted_loc}Jobs",
-            f"#{formatted_loc}DispatchRiders",
-            f"#{formatted_loc}Delivery",
-            f"#{formatted_loc}Dispatch",
-            f"#LastMile{formatted_loc}",
-            f"Urgent dispatch rider needed in {location.title()}"
-        ]
-
-        return base_tags + location_tags
+        # We attach the location to EVERY tag via f-string for absolute generic search
+        return [f"{tag} in {location}" for tag in base_tags]
 
     def stream_search(self, city, session_id):
         all_leads = []
-        # Get your expanded tag list
         dispatch_tags = self.get_dispatch_tags(city)
         total_tags = len(dispatch_tags)
 
         with DDGS() as ddgs:
-            # We use a step to avoid searching 70+ tags (which might get your IP flagged)
-            # Searching every 3rd tag gives a broad sweep quickly.
-            # Change 'step=1' if you want to search absolutely everything.
-            for i in range(0, total_tags, 2):
+            # step=1: We search EVERY tag. No skipping.
+            for i in range(total_tags):
                 tag = dispatch_tags[i]
                 progress = int(((i + 1) / total_tags) * 100)
 
-                yield f"data: {json.dumps({'progress': progress, 'status': f'Scanning Tag: {tag}'})}\n\n"
+                yield f"data: {json.dumps({'progress': progress, 'status': f'Scanning: {tag}'})}\n\n"
 
-                # Combine city + specific tag for the query
-                query = f'"{city}" "{tag}" "contact" OR "080"'
+                # Query is now simplified: it's just your location-injected tag + contact triggers
+                query = f'{tag} "contact" OR "080" OR "email"'
 
                 try:
-                    results = ddgs.text(query, max_results=8)
+                    # max_results=10 to keep the deep search going
+                    results = ddgs.text(query, max_results=10)
                     for entry in results:
                         text = f"{entry['title']} {entry['body']}"
                         emails = re.findall(self.email_pattern, text)
@@ -90,19 +76,21 @@ class Scraper:
 
                         for c in contacts:
                             all_leads.append({
-                                'Company/Source': entry['title'][:60],
+                                'Company/Source': entry['title'][:70],
                                 'Contact Detail': c,
-                                'Tag Matched': tag,
+                                'Keyword Used': tag,
                                 'Link': entry['href']
                             })
-                    # Keep the scrape "Clean" and human-like
-                    time.sleep(random.uniform(0.3, 0.7))
+                    # Slight delay to keep the connection healthy
+                    time.sleep(random.uniform(0.2, 0.5))
                 except:
+                    # If we hit a rate limit, pause a bit longer
+                    time.sleep(2)
                     continue
 
         df = pd.DataFrame(all_leads).drop_duplicates(subset=['Contact Detail'])
         results_storage[session_id] = df
-        yield f"data: {json.dumps({'progress': 100, 'status': 'Leads secured!', 'done': True})}\n\n"
+        yield f"data: {json.dumps({'progress': 100, 'status': 'All tags scanned! Ready.', 'done': True})}\n\n"
 
 
 @app.route("/")
@@ -114,7 +102,7 @@ def index():
 def progress():
     city = request.args.get('city')
     session_id = request.args.get('session_id')
-    return Response(Scraper().stream_search(city, session_id), mimetype='text/event-stream')
+    return Response(self_stream := Scraper().stream_search(city, session_id), mimetype='text/event-stream')
 
 
 @app.route("/download")
@@ -128,7 +116,7 @@ def download():
         df.to_csv(buf, index=False)
         buf.seek(0)
         return send_file(buf, mimetype="text/csv", as_attachment=True, download_name=f"dispatch_leads_{city}.csv")
-    return "File Generation Error", 404
+    return "Error: Data expired or not found", 404
 
 
 if __name__ == "__main__":
