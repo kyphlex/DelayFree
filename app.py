@@ -36,7 +36,7 @@ class Scraper:
             "pickup and dropoff", "keke delivery", "food delivery rider",
             "pharmacy delivery rider", "dispatch bike remittance", "ecommerce logistics rider"
         ]
-        return [f"{tag} in {location}" for tag in base_tags]
+        return [f"{tag} {location}" for tag in base_tags]
 
     def stream_search(self, city: str, session_id: str):
         all_leads = []
